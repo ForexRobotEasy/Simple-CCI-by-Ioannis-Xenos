@@ -1,0 +1,77 @@
+
+//+------------------------------------------------------------------+
+//|                                                   Simple CCI by Ioannis Xenos |
+//|                                      https://www.forexroboteasy.com |
+//|                                                       Forex Robot Easy Team |
+//+------------------------------------------------------------------+
+
+//--- Define parameters
+input int CCI_Period = 14;                 // CCI calculation period
+input double Overbought_Level = 100.0;     // Overbought level
+input double Oversold_Level = -100.0;      // Oversold level
+input bool Use_Trend_Continuation = true;  // Use trend continuation strategy
+
+//--- Define global variables
+double CCI_Buffer[];                       // CCI buffer
+double Open_Price_Buffer[];                 // Open price buffer
+
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+   //--- Initialize buffers
+   ArrayResize(CCI_Buffer, Bars);
+   ArrayResize(Open_Price_Buffer, Bars);
+
+   //--- Calculate CCI for the whole history
+   for(int i = 0; i < Bars; i++)
+   {
+      CCI_Buffer[i] = iCCI(Symbol(), PERIOD_CURRENT, CCI_Period, PRICE_TYPICAL, i);
+      Open_Price_Buffer[i] = Open[i];
+   }
+
+   return(INIT_SUCCEEDED);
+}
+
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+   //--- Clean up
+   ArrayResize(CCI_Buffer, 0);
+   ArrayResize(Open_Price_Buffer, 0);
+}
+
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+   //--- Get the latest CCI value
+   double current_cci = iCCI(Symbol(), PERIOD_CURRENT, CCI_Period, PRICE_TYPICAL, 0);
+
+   //--- Check for oversold condition
+   if(current_cci < Oversold_Level)
+   {
+      //--- Execute mean reversion strategy
+      // Place sell order at market price
+      OrderSend(Symbol(), OP_SELL, 1, Ask, 0, 0, 0, '', 0, 0, CLR_NONE);
+   }
+
+   //--- Check for overbought condition
+   if(current_cci > Overbought_Level)
+   {
+      //--- Execute trend continuation strategy
+      // Place buy order at market price
+      OrderSend(Symbol(), OP_BUY, 1, Bid, 0, 0, 0, '', 0, 0, CLR_NONE);
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Custom functions                                                 |
+//+------------------------------------------------------------------+
+
+//--- Add any custom functions or indicators here
+
